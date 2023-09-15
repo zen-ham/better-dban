@@ -47,8 +47,10 @@ def delete_messages(token, channel_id, user_id):
             else:
                 print("Failed to delete message ID {}. Error: {}".format(message_id, response.json()))
             # Respect the rate limit
-            if 1.5 - (time.time() - start_time) > 0:
-                time.sleep(1.2 - (time.time() - start_time))
+            sleep_time = 1.5
+            wait = sleep_time - (time.time() - start_time)
+            if wait > 0:
+                time.sleep(wait)
             try:
                 while 'retry_after' in str(response.json()):
                     try:
@@ -63,7 +65,6 @@ def delete_messages(token, channel_id, user_id):
                     else:
                         print("Failed to delete message ID {}. Error: {}".format(message_id, response.json()))
                     # Respect the rate limit
-                    sleep_time = 1.5
                     wait = sleep_time-(time.time()-start_time)
                     if wait > 0:
                         time.sleep(wait)
