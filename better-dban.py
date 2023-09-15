@@ -1,7 +1,6 @@
 import requests
 import time
 
-
 def delete_messages(token, channel_id, user_id):
     '''
     Function to delete all client messages in a specific channel. Script by @z_h_ on discord.
@@ -36,6 +35,11 @@ def delete_messages(token, channel_id, user_id):
         print(f'Found {len(message_ids)} messages from user')
 
         for message_id in message_ids:
+            try:
+                if 'retry_after' in str(response.json()):
+                    time.sleep(float(response.json()['retry_after']))
+            except:
+                pass
             start_time = time.time()
             response = requests.delete(base_url + '/' + message_id, headers=headers)
             if response.status_code == 204:
@@ -43,8 +47,28 @@ def delete_messages(token, channel_id, user_id):
             else:
                 print("Failed to delete message ID {}. Error: {}".format(message_id, response.json()))
             # Respect the rate limit
-            if 1.2-(time.time()-start_time):
-                time.sleep(1.2-(time.time()-start_time))
+            if 1.5 - (time.time() - start_time) > 0:
+                time.sleep(1.2 - (time.time() - start_time))
+            try:
+                while 'retry_after' in str(response.json()):
+                    try:
+                        if 'retry_after' in str(response.json()):
+                            time.sleep(float(response.json()['retry_after']))
+                    except:
+                        pass
+                    start_time = time.time()
+                    response = requests.delete(base_url + '/' + message_id, headers=headers)
+                    if response.status_code == 204:
+                        print("Message ID {} deleted successfully.".format(message_id))
+                    else:
+                        print("Failed to delete message ID {}. Error: {}".format(message_id, response.json()))
+                    # Respect the rate limit
+                    sleep_time = 1.5
+                    wait = sleep_time-(time.time()-start_time)
+                    if wait > 0:
+                        time.sleep(wait)
+            except:
+                pass
 
         last_message_id = stuff.pop()['id']
 
